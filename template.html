@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Plate Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            color: black;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .plate-img {
+            max-width: 120px;
+            margin: 5px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        button {
+            background: #ff7eb3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #ff5277;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🚗 License Plate Recognition 🚓</h2>
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="uploadImage()">Upload and Process</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        function uploadImage() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files.length) return;
+
+            const formData = new FormData();
+            formData.append("img", fileInput.files[0]);
+
+            fetch("http://0.0.0.0:1904/license_plate?format_type=file", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = "";
+
+                if (data.errorCode === "0") {
+                    const plates = document.createElement("p");
+                    plates.textContent = "Plates: " + data.data.result.join(", ");
+                    resultDiv.appendChild(plates);
+
+                    data.data.image.forEach(base64Img => {
+                        const img = document.createElement("img");
+                        img.src = `data:image/jpeg;base64,${base64Img}`;
+                        img.className = "plate-img";
+                        resultDiv.appendChild(img);
+                    });
+                } else {
+                    resultDiv.textContent = "❌ Error: " + data.errorMessage;
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>
